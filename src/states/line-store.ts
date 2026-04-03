@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 
 type Line = {
-  text: string;
+  id: string;
+  data: string[];
   type: 'input' | 'output';
+  variant?: 'default' | 'error';
   timestamp: string;
-  state: 'default' | 'error' | 'success';
 };
 
 interface TerminalState {
@@ -15,10 +16,11 @@ interface TerminalState {
 
 const lines: Line[] = [
   {
-    text: 'Welcome to Notes. Type help to see available commands.',
+    id: crypto.randomUUID(),
+    data: ['Welcome to Notes. Type help to see available commands.'],
     type: 'output',
+    variant: 'default',
     timestamp: new Date().toLocaleTimeString(),
-    state: 'default',
   },
 ];
 

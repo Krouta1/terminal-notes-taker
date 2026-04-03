@@ -6,34 +6,20 @@ const Lines = () => {
   const { input, setInput, inputRef } = useTerminalInput();
 
   return (
-    <div
-      className="font-mono text-sm"
-      onClick={() => inputRef.current?.focus()}
-    >
-      {lines.map((line, i) => (
-        <div key={i}>
+    <div className="font-mono text-sm" onClick={() => inputRef.current?.focus()}>
+      {lines.map(line => (
+        <div key={line.id}>
           <span className="mr-1 text-green-400">&gt;</span>
           <span className="mr-1 text-gray-400">[{line.timestamp}]</span>
-          <span
-            className={
-              line.state === 'error'
-                ? 'text-red-500'
-                : line.state === 'success'
-                  ? 'text-green-500'
-                  : 'text-white'
-            }
-          >
-            {' '}
-            {line.text}
-          </span>
+          <span className={line.variant === 'error' ? 'text-red-500' : 'text-white'}> {line.data.join('')}</span>
         </div>
       ))}
       <div className="flex items-center">
         <span className="mr-1 text-green-400">&gt;</span>
         <input
           ref={inputRef}
-          value={input}
-          onChange={e => setInput(e.target.value)}
+          value={input.join('')}
+          onChange={e => setInput([e.target.value])}
           className="flex-1 bg-transparent text-white caret-white outline-none"
           autoFocus
         />

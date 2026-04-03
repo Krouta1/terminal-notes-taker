@@ -8,7 +8,8 @@ export const runCommand = (input: string): boolean => {
   const cmd = trimmed.slice(1).toLowerCase();
   if (!ALLOWED_COMMANDS.includes(cmd)) {
     useLineStore.getState().addLine({
-      text: `Unknown command: ${cmd}`,
+      id: crypto.randomUUID(),
+      data: [`Unknown command: ${cmd}`],
       type: 'output',
       timestamp: new Date().toLocaleTimeString(),
       state: 'error',

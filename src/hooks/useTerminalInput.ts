@@ -7,11 +7,9 @@ import { useLineStore } from '../states/line-store';
 
 export const useTerminalInput = () => {
   const lines = useLineStore(state => state.lines);
-  const inputLines = useLineStore(
-    useShallow(state => state.lines.filter(l => l.type === 'input')),
-  );
+  const inputLines = useLineStore(useShallow(state => state.lines.filter(l => l.type === 'input')));
 
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState<string[]>([]);
   const [_ignored, setNow] = useState(() => new Date().toLocaleTimeString());
   const [historyIndex, setHistoryIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
