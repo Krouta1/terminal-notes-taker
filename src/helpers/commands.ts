@@ -1,6 +1,6 @@
 import { useLineStore } from '../states/line-store';
 import { ALLOWED_COMMANDS, HELP_COMMANDS } from './helpers';
-import { saveNoteToIndexedDB } from './indexed-db';
+import { saveNoteToIndexedDB, getAllNotesFromIndexedDB } from './indexed-db';
 import { addOutputLine } from './methods';
 
 export const runCommand = (input: string): boolean => {
@@ -26,6 +26,25 @@ export const runCommand = (input: string): boolean => {
         'info',
         HELP_COMMANDS.map(({ command, description }) => `${command} — ${description}`),
       );
+      return true;
+    case 'list':
+      void getAllNotesFromIndexedDB()
+        .then(notes => {
+          if (notes.length === 0) {
+            addOutputLine('No notes found.', 'info');
+          } else {
+            addOutputLine(
+              'Saved notes:',
+              'info',
+              notes.map(note => note.text),
+            );
+          }
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          addOutputLine(`Failed to retrieve notes: ${message}`, 'error');
+        });
+
       return true;
     case 'add':
       if (!note) {

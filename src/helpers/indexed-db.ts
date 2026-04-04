@@ -42,3 +42,18 @@ export const saveNoteToIndexedDB = async (note: string): Promise<NoteRecord> => 
     transaction.onerror = () => reject(transaction.error ?? new Error('Failed to save note.'));
   });
 };
+
+export const getAllNotesFromIndexedDB = async (): Promise<NoteRecord[]> => {
+  const db = await openNotesDatabase();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result as NoteRecord[]);
+    request.onerror = () => reject(request.error ?? new Error('Failed to retrieve notes.'));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () => reject(transaction.error ?? new Error('Failed to retrieve notes.'));
+  });
+};
