@@ -3,36 +3,50 @@
 ## Project Overview
 
 **Goal:**  
-A React + TypeScript app that works like a terminal interface to manage notes locally using IndexedDB. Users can type commands to add, list, delete, and search notes. The app should work offline and have a clean, minimalistic terminal UI.
+A React + TypeScript app with a terminal-like UI for local note-taking. Right now the project focuses on the shell experience, command parsing, and line rendering. Persistent note storage with IndexedDB is still planned, not implemented.
 
-**Stack:**
+## Current Status
+
+### Implemented
+
+- Terminal-style UI centered on the page
+- Keyboard interaction with `Enter`, `ArrowUp`, and `ArrowDown`
+- Input history navigation for previously submitted commands
+- `/clear` command to reset terminal output
+- `/help` command to show available commands
+- Error output for unknown slash commands
+
+### Planned
+
+- `/add <note>`
+- `/list`
+- `/delete <id>`
+- `/search <keyword>`
+- IndexedDB persistence via `idb`
+
+---
+
+## Stack
 
 - Vite + React + TypeScript
-- [idb](https://www.npmjs.com/package/idb) (IndexedDB wrapper) — not yet integrated
-- Tailwind CSS for styling
-- react-hotkeys-hook for keyboard shortcuts
-- Zustand for state management
-- clsx for conditional classnames
+- Tailwind CSS v4
+- Zustand for terminal line state
+- `react-hotkeys-hook` for keyboard shortcuts
+- `clsx` installed for conditional styling
+- `idb` planned but not yet integrated
 
 ---
 
 ## Commands
 
-Commands are prefixed with `/`. Unknown commands show an error output line.
+Commands must start with `/`.
 
-| Command  | Description                               |
-| -------- | ----------------------------------------- |
-| `/clear` | Clear terminal output                     |
-| `/help`  | Show all commands — _not yet implemented_ |
+| Command  | Status | Description                                       |
+| -------- | ------ | ------------------------------------------------- |
+| `/clear` | ✅     | Clears the terminal back to the initial greeting  |
+| `/help`  | ✅     | Shows the available commands from `HELP_COMMANDS` |
 
-Planned:
-
-| Command             | Description       |
-| ------------------- | ----------------- |
-| `/add <note>`       | Add a new note    |
-| `/list`             | List all notes    |
-| `/delete <id>`      | Delete note by ID |
-| `/search <keyword>` | Search notes      |
+Unknown commands render an output line with the `error` variant.
 
 ---
 
@@ -40,40 +54,65 @@ Planned:
 
 ### State
 
-- `src/states/line-store.ts` — Zustand store (`useLineStore`). Manages the `lines` array. Each `Line` has `text`, `type` (`input` | `output`), `timestamp`, and `state` (`default` | `error` | `success`). `clearLines()` resets to the initial greeting line.
+- `src/states/line-store.ts`
+  - Zustand store: `useLineStore`
+  - Keeps the `lines` array
+  - Exposes `addLine()` and `clearLines()`
+  - Starts with a welcome output line
+
+### Shared Types
+
+- `src/helpers/types.ts`
+  - `LineData`: `{ text?: string; values?: string[] }`
+  - `Line`: terminal row model with `id`, `data`, `type`, `variant`, and `timestamp`
+  - `LineVariant`: `'default' | 'error' | 'info'`
 
 ### Components
 
-- `src/components/treminal.tsx` — Shell component, renders `<Lines />` inside a styled terminal box.
-- `src/components/lines.tsx` — Renders all lines from the store and the active input row. Uses `useTerminalInput` for all logic.
+- `src/components/treminal.tsx` — main terminal container UI
+- `src/components/lines.tsx` — renders terminal history and active input field
+- `src/components/line-prefix.tsx` — renders the prompt symbol and timestamp
+- `src/components/output.tsx` — renders output lines by variant and maps `values` for help/info lists
 
-### Hooks
+### Hook
 
-- `src/hooks/useTerminalInput.ts` — Owns local input state (`input`, `historyIndex`, `now`), wires up `useHotkeys`, handles focus and clock sync on line changes.
+- `src/hooks/useTerminalInput.ts`
+  - Stores the current input as `LineData[]`
+  - Focuses the input on updates
+  - Wires keyboard shortcuts via `useHotkeys`
+  - Supports command history navigation
 
 ### Helpers
 
-- `src/helpers/helpers.ts` — Constants: `HOTKEYS` (key list for `useHotkeys`), `ALLOWED_COMMANDS` (valid command names).
-- `src/helpers/commands.ts` — `runCommand(input)`: strips `/`, matches against `ALLOWED_COMMANDS`, executes or outputs an error. Returns `true` if the input was consumed as a command.
-- `src/helpers/hot-keys-methods.ts` — Pure functions for each hotkey case: `onEnter`, `onArrowUp`, `onArrowDown`. Called from the switch in `useTerminalInput`.
+- `src/helpers/helpers.ts`
+  - `HOTKEYS`
+  - `ALLOWED_COMMANDS`
+  - `HELP_COMMANDS`
+- `src/helpers/commands.ts`
+  - `runCommand(input)` parses slash commands and pushes output into the store
+- `src/helpers/hot-keys-methods.ts`
+  - `onEnter`, `onArrowUp`, `onArrowDown`
 
 ---
 
-## File Structure
+## Current File Structure
 
-```
+```text
 src/
   components/
-    lines.tsx           # Renders line history + active input
-    treminal.tsx        # Terminal wrapper UI
+    line-prefix.tsx     # Prompt symbol and timestamp
+    lines.tsx           # Line history + active input row
+    output.tsx          # Output renderer for default/error/info lines
+    treminal.tsx        # Terminal shell wrapper
   helpers/
-    commands.ts         # Command routing and execution
-    helpers.ts          # HOTKEYS and ALLOWED_COMMANDS constants
-    hot-keys-methods.ts # onEnter / onArrowUp / onArrowDown logic
+    commands.ts         # Command routing
+    helpers.ts          # HOTKEYS, ALLOWED_COMMANDS, HELP_COMMANDS
+    hot-keys-methods.ts # Keyboard handlers
+    types.ts            # Shared line types
   hooks/
-    useTerminalInput.ts # Input state, hotkeys, history navigation
+    useTerminalInput.ts # Input state and history handling
   states/
-    line-store.ts       # Zustand line store (useLineStore)
+    line-store.ts       # Zustand store for terminal lines
   App.tsx
   main.tsx
 ```

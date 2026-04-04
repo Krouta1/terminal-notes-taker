@@ -1,5 +1,5 @@
 import { useLineStore } from '../states/line-store';
-import { ALLOWED_COMMANDS } from './helpers';
+import { ALLOWED_COMMANDS, HELP_COMMANDS } from './helpers';
 
 export const runCommand = (input: string): boolean => {
   const trimmed = input.trim();
@@ -9,10 +9,10 @@ export const runCommand = (input: string): boolean => {
   if (!ALLOWED_COMMANDS.includes(cmd)) {
     useLineStore.getState().addLine({
       id: crypto.randomUUID(),
-      data: [`Unknown command: ${cmd}`],
+      data: [{ text: `Unknown command: ${cmd}` }],
       type: 'output',
       timestamp: new Date().toLocaleTimeString(),
-      state: 'error',
+      variant: 'error',
     });
     return true;
   }
@@ -20,6 +20,20 @@ export const runCommand = (input: string): boolean => {
   switch (cmd) {
     case 'clear':
       useLineStore.getState().clearLines();
+      return true;
+    case 'help':
+      useLineStore.getState().addLine({
+        id: crypto.randomUUID(),
+        data: [
+          {
+            text: 'Available commands:',
+            values: HELP_COMMANDS.map(({ command, description }) => `${command} — ${description}`),
+          },
+        ],
+        type: 'output',
+        timestamp: new Date().toLocaleTimeString(),
+        variant: 'info',
+      });
       return true;
     default:
       return false;
