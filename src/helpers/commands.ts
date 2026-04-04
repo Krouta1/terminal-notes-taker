@@ -1,6 +1,6 @@
 import { useLineStore } from '../states/line-store';
 import { ALLOWED_COMMANDS, HELP_COMMANDS } from './helpers';
-import { saveNoteToIndexedDB, getAllNotesFromIndexedDB } from './indexed-db';
+import { saveNoteToIndexedDB, getAllNotesFromIndexedDB, deleteNoteFromIndexedDB } from './indexed-db';
 import { addOutputLine } from './methods';
 
 export const runCommand = (input: string): boolean => {
@@ -36,7 +36,7 @@ export const runCommand = (input: string): boolean => {
             addOutputLine(
               'Saved notes:',
               'info',
-              notes.map(note => note.text),
+              notes.map(({ id, text }) => `[${id}] ${text}`),
             );
           }
         })
@@ -53,8 +53,8 @@ export const runCommand = (input: string): boolean => {
       }
 
       void saveNoteToIndexedDB(note)
-        .then(() => {
-          addOutputLine(`Saved note: ${note}`);
+        .then(savedNote => {
+          addOutputLine(`Saved note [${savedNote.id}]: ${savedNote.text}`);
         })
         .catch((error: unknown) => {
           const message = error instanceof Error ? error.message : 'Unknown error';
@@ -62,6 +62,24 @@ export const runCommand = (input: string): boolean => {
         });
 
       return true;
+    case 'delete': {
+      if (!note) {
+        addOutputLine('Usage: /delete <id>', 'error');
+        return true;
+      }
+
+      const noteId = note.replace(/^['"]|['"]$/g, '');
+
+      void deleteNoteFromIndexedDB(noteId)
+        .then(deletedNote => {
+          addOutputLine(`Deleted note [${deletedNote.id}]: ${deletedNote.text}`);
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          addOutputLine(`Failed to delete note: ${message}`, 'error');
+        });
+      return true;
+    }
     default:
       return false;
   }
