@@ -84,3 +84,32 @@ export const deleteNoteFromIndexedDB = async (noteId: string): Promise<NoteRecor
     transaction.onerror = () => reject(transaction.error ?? new Error('Failed to delete note.'));
   });
 };
+
+export const editNoteInIndexedDB = async (noteId: string, newText: string): Promise<NoteRecord> => {
+  const db = await openNotesDatabase();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const getRequest = store.get(noteId);
+
+    getRequest.onsuccess = () => {
+      const existingNote = getRequest.result as NoteRecord | undefined;
+
+      if (!existingNote) {
+        reject(new Error(`Note with ID "${noteId}" was not found.`));
+        return;
+      }
+
+      const updatedNote: NoteRecord = { ...existingNote, text: newText };
+      const updateRequest = store.put(updatedNote);
+
+      updateRequest.onsuccess = () => resolve(updatedNote);
+      updateRequest.onerror = () => reject(updateRequest.error ?? new Error('Failed to edit note.'));
+    };
+
+    getRequest.onerror = () => reject(getRequest.error ?? new Error('Failed to find note to edit.'));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () => reject(transaction.error ?? new Error('Failed to edit note.'));
+  });
+};

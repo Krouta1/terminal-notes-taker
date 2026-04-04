@@ -1,7 +1,14 @@
 import { useLineStore } from '../states/line-store';
 import { ALLOWED_COMMANDS, HELP_COMMANDS } from './helpers';
-import { saveNoteToIndexedDB, getAllNotesFromIndexedDB, deleteNoteFromIndexedDB } from './indexed-db';
+import {
+  saveNoteToIndexedDB,
+  getAllNotesFromIndexedDB,
+  deleteNoteFromIndexedDB,
+  editNoteInIndexedDB,
+} from './indexed-db';
 import { addOutputLine } from './methods';
+
+const stripWrappingQuotes = (value: string): string => value.replace(/^['"]|['"]$/g, '');
 
 export const runCommand = (input: string): boolean => {
   const trimmed = input.trim();
@@ -46,13 +53,15 @@ export const runCommand = (input: string): boolean => {
         });
 
       return true;
-    case 'add':
+    case 'add': {
       if (!note) {
         addOutputLine('Usage: /add <note>', 'error');
         return true;
       }
 
-      void saveNoteToIndexedDB(note)
+      const noteText = stripWrappingQuotes(note);
+
+      void saveNoteToIndexedDB(noteText)
         .then(savedNote => {
           addOutputLine(`Saved note [${savedNote.id}]: ${savedNote.text}`);
         })
@@ -62,13 +71,14 @@ export const runCommand = (input: string): boolean => {
         });
 
       return true;
+    }
     case 'delete': {
       if (!note) {
         addOutputLine('Usage: /delete <id>', 'error');
         return true;
       }
 
-      const noteId = note.replace(/^['"]|['"]$/g, '');
+      const noteId = stripWrappingQuotes(note);
 
       void deleteNoteFromIndexedDB(noteId)
         .then(deletedNote => {
@@ -77,6 +87,26 @@ export const runCommand = (input: string): boolean => {
         .catch((error: unknown) => {
           const message = error instanceof Error ? error.message : 'Unknown error';
           addOutputLine(`Failed to delete note: ${message}`, 'error');
+        });
+      return true;
+    }
+    case 'edit': {
+      const [rawNoteId = '', ...textParts] = args;
+      const noteId = stripWrappingQuotes(rawNoteId);
+      const newText = stripWrappingQuotes(textParts.join(' ').trim());
+
+      if (!noteId || !newText) {
+        addOutputLine('Usage: /edit <id> <new note text>', 'error');
+        return true;
+      }
+
+      void editNoteInIndexedDB(noteId, newText)
+        .then(editedNote => {
+          addOutputLine(`Edited note [${editedNote.id}]: ${editedNote.text}`);
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          addOutputLine(`Failed to edit note: ${message}`, 'error');
         });
       return true;
     }
