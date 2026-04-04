@@ -1,18 +1,23 @@
-// Types for Lines
 export type LineVariant = 'default' | 'error' | 'info';
 
-export type LineData = {
-  text?: string;
-  values?: string[];
-};
-
-export type Line = {
+type BaseLine = {
   id: string;
-  data: LineData[];
-  type: 'input' | 'output';
-  variant?: LineVariant;
   timestamp: string;
 };
+
+export type InputLine = BaseLine & {
+  type: 'input';
+  text: string;
+};
+
+export type OutputLine = BaseLine & {
+  type: 'output';
+  text: string;
+  items?: string[];
+  variant?: LineVariant;
+};
+
+export type Line = InputLine | OutputLine;
 
 export interface LineState {
   lines: Line[];

@@ -3,20 +3,20 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useShallow } from 'zustand/shallow';
 import { onArrowDown, onArrowUp, onEnter } from '../helpers/hot-keys-methods';
 import { HOTKEYS } from '../helpers/helpers';
-import type { LineData } from '../helpers/types';
+import type { InputLine } from '../helpers/types';
 import { useLineStore } from '../states/line-store';
 
 export const useTerminalInput = () => {
   const lines = useLineStore(state => state.lines);
-  const inputLines = useLineStore(useShallow(state => state.lines.filter(l => l.type === 'input')));
+  const inputLines = useLineStore(
+    useShallow(state => state.lines.filter((line): line is InputLine => line.type === 'input')),
+  );
 
-  const [input, setInput] = useState<LineData[]>([{ text: '' }]);
-  const [_ignored, setNow] = useState(() => new Date().toLocaleTimeString());
+  const [input, setInput] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setNow(new Date().toLocaleTimeString());
     inputRef.current?.focus();
   }, [lines]);
 

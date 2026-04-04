@@ -1,19 +1,18 @@
 import { useLineStore } from '../states/line-store';
 import { ALLOWED_COMMANDS, HELP_COMMANDS } from './helpers';
+import { saveNoteToIndexedDB } from './indexed-db';
+import { addOutputLine } from './methods';
 
 export const runCommand = (input: string): boolean => {
   const trimmed = input.trim();
   if (!trimmed.startsWith('/')) return false;
 
-  const cmd = trimmed.slice(1).toLowerCase();
+  const [rawCmd = '', ...args] = trimmed.slice(1).split(/\s+/);
+  const cmd = rawCmd.toLowerCase();
+  const note = args.join(' ').trim();
+
   if (!ALLOWED_COMMANDS.includes(cmd)) {
-    useLineStore.getState().addLine({
-      id: crypto.randomUUID(),
-      data: [{ text: `Unknown command: ${cmd}` }],
-      type: 'output',
-      timestamp: new Date().toLocaleTimeString(),
-      variant: 'error',
-    });
+    addOutputLine(`Unknown command: ${cmd}`, 'error');
     return true;
   }
 
@@ -22,18 +21,27 @@ export const runCommand = (input: string): boolean => {
       useLineStore.getState().clearLines();
       return true;
     case 'help':
-      useLineStore.getState().addLine({
-        id: crypto.randomUUID(),
-        data: [
-          {
-            text: 'Available commands:',
-            values: HELP_COMMANDS.map(({ command, description }) => `${command} — ${description}`),
-          },
-        ],
-        type: 'output',
-        timestamp: new Date().toLocaleTimeString(),
-        variant: 'info',
-      });
+      addOutputLine(
+        'Available commands:',
+        'info',
+        HELP_COMMANDS.map(({ command, description }) => `${command} — ${description}`),
+      );
+      return true;
+    case 'add':
+      if (!note) {
+        addOutputLine('Usage: /add <note>', 'error');
+        return true;
+      }
+
+      void saveNoteToIndexedDB(note)
+        .then(() => {
+          addOutputLine(`Saved note: ${note}`);
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          addOutputLine(`Failed to save note: ${message}`, 'error');
+        });
+
       return true;
     default:
       return false;

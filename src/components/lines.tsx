@@ -10,12 +10,12 @@ const Lines = () => {
   return (
     <div className="font-mono text-sm" onClick={() => inputRef.current?.focus()}>
       {lines.map(line => (
-        <div key={line.id}>
+        <div key={line.id} className="flex">
           <LinePrefix timestamp={line.timestamp} />
           {line.type === 'input' ? (
-            <span>{line.data.map(item => item.text ?? '').join('')}</span>
+            <span className="whitespace-pre-wrap text-white">{line.text}</span>
           ) : (
-            <Output data={line.data} variant={line.variant} />
+            <Output text={line.text} items={line.items} variant={line.variant} />
           )}
         </div>
       ))}
@@ -23,8 +23,8 @@ const Lines = () => {
         <span className="mr-1 text-green-400">&gt;</span>
         <input
           ref={inputRef}
-          value={input.map(item => item.text ?? '').join('')}
-          onChange={e => setInput([{ text: e.target.value }])}
+          value={input}
+          onChange={e => setInput(e.target.value)}
           className="flex-1 bg-transparent text-white caret-white outline-none"
           autoFocus
         />
