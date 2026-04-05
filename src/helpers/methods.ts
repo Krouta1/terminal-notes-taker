@@ -15,6 +15,21 @@ export const addOutputLine = (text: string, variant: LineVariant = 'default', it
 
 export const stripWrappingQuotes = (value: string): string => value.replace(/^['"]|['"]$/g, '');
 
+export const normalizeNoteTags = (value: unknown): string[] => {
+  const rawTags =
+    typeof value === 'string'
+      ? value.split(/[\s,]+/)
+      : Array.isArray(value)
+        ? value.flatMap(item => (typeof item === 'string' ? item.split(/[\s,]+/) : []))
+        : [];
+
+  return [
+    ...new Set(rawTags.map(tag => stripWrappingQuotes(tag).trim().toLowerCase().replace(/^#+/, '')).filter(Boolean)),
+  ];
+};
+
+export const formatNoteTags = (tags: string[]): string => (tags.length > 0 ? tags.map(tag => `#${tag}`).join(' ') : '');
+
 export const createAtRelativeTime = (date: Date): string => {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -45,7 +60,7 @@ export const normalizeImportedNotes = (payload: unknown): NoteRecord[] => {
       return [];
     }
 
-    const { id, text, createdAt } = item as Partial<NoteRecord>;
+    const { id, text, createdAt, tags } = item as Partial<NoteRecord>;
 
     if (typeof text !== 'string' || text.trim().length === 0) {
       return [];
@@ -61,6 +76,7 @@ export const normalizeImportedNotes = (payload: unknown): NoteRecord[] => {
         id: typeof id === 'string' && id.trim().length > 0 ? id.trim() : crypto.randomUUID(),
         text: text.trim(),
         createdAt: safeCreatedAt,
+        tags: normalizeNoteTags(tags),
       },
     ];
   });
@@ -71,3 +87,8 @@ export const normalizeImportedNotes = (payload: unknown): NoteRecord[] => {
 
   return normalizedNotes;
 };
+
+export const normalizeStoredNote = (note: Omit<NoteRecord, 'tags'> & { tags?: unknown }): NoteRecord => ({
+  ...note,
+  tags: normalizeNoteTags(note.tags),
+});

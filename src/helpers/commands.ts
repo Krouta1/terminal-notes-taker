@@ -6,8 +6,9 @@ import {
   deleteNoteFromIndexedDB,
   editNoteInIndexedDB,
   importNotesToIndexedDB,
+  tagNoteInIndexedDB,
 } from './indexed-db';
-import { addOutputLine, createAtRelativeTime, stripWrappingQuotes } from './methods';
+import { addOutputLine, createAtRelativeTime, formatNoteTags, normalizeNoteTags, stripWrappingQuotes } from './methods';
 
 const pickImportFile = (): Promise<File | null> =>
   new Promise(resolve => {
@@ -76,7 +77,10 @@ export const runCommand = (input: string): boolean => {
             addOutputLine(
               'Saved notes:',
               'info',
-              notes.map(({ id, text, createdAt }) => `[${id}] ${text} (${createAtRelativeTime(new Date(createdAt))})`),
+              notes.map(({ id, text, createdAt, tags }) => {
+                const tagLabel = formatNoteTags(tags);
+                return `[${id}] ${text}${tagLabel ? ` ${tagLabel}` : ''} (${createAtRelativeTime(new Date(createdAt))})`;
+              }),
             );
           }
         })
@@ -143,6 +147,28 @@ export const runCommand = (input: string): boolean => {
         });
       return true;
     }
+    case 'tag': {
+      const [rawNoteId = '', ...tagParts] = args;
+      const noteId = stripWrappingQuotes(rawNoteId);
+      const tags = normalizeNoteTags(tagParts.join(' '));
+
+      if (!noteId || tags.length === 0) {
+        addOutputLine('Usage: /tag <id> <tag1> [tag2 ...]', 'error');
+        return true;
+      }
+
+      void tagNoteInIndexedDB(noteId, tags)
+        .then(taggedNote => {
+          const tagLabel = formatNoteTags(taggedNote.tags);
+          addOutputLine(`Tagged note [${taggedNote.id}]: ${taggedNote.text}${tagLabel ? ` ${tagLabel}` : ''}`);
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          addOutputLine(`Failed to tag note: ${message}`, 'error');
+        });
+
+      return true;
+    }
     case 'search': {
       if (!note) {
         addOutputLine('Usage: /search <query>');
@@ -153,14 +179,20 @@ export const runCommand = (input: string): boolean => {
 
       void getAllNotesFromIndexedDB()
         .then(notes => {
-          const results = notes.filter(({ text }) => text.toLowerCase().includes(query));
+          const results = notes.filter(
+            ({ text, tags }) =>
+              text.toLowerCase().includes(query) || tags.some(tag => tag.toLowerCase().includes(query)),
+          );
           if (results.length === 0) {
             addOutputLine('No matching notes found.', 'info');
           } else {
             addOutputLine(
               `Search results for "${query}":`,
               'info',
-              results.map(({ id, text }) => `[${id}] ${text}`),
+              results.map(({ id, text, tags }) => {
+                const tagLabel = formatNoteTags(tags);
+                return `[${id}] ${text}${tagLabel ? ` ${tagLabel}` : ''}`;
+              }),
             );
           }
         })
