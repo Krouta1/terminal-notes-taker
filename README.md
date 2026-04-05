@@ -1,75 +1,138 @@
-# React + TypeScript + Vite
+# Terminal Notes Taker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern **terminal-style note-taking app** built with **React, TypeScript, and Vite**.
 
-Currently, two official plugins are available:
+It lets you create and manage notes with simple slash commands in a clean, keyboard-first interface. Notes are stored locally in the browser using **IndexedDB**, so no backend is required.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ What this project is about
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+`Terminal Notes Taker` is a local-first productivity app designed for people who like fast workflows and minimal friction.
 
-Note: This will impact Vite dev & build performances.
+Instead of clicking through forms, you interact with your notes through commands such as:
 
-## Expanding the ESLint configuration
+- `/add`
+- `/list`
+- `/edit`
+- `/tag`
+- `/search`
+- `/export`
+- `/import`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The UI combines a terminal-inspired workspace with a more modern layout so it feels both lightweight and easy to navigate.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🚀 Features
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Terminal-style interface** for quick note input
+- **Modern dark UI** with a cleaner landing layout
+- **IndexedDB persistence** for local browser storage
+- **Edit and delete** existing notes
+- **Tag notes** for better organization
+- **Search by text or tags**
+- **Export notes to JSON** for backup
+- **Import notes from JSON** to restore or migrate data
+- **Keyboard-friendly workflow** with command history navigation
+
+---
+
+## 🧰 Available Commands
+
+| Command                       | Description                       |
+| ----------------------------- | --------------------------------- |
+| `/help`                       | Show all supported commands       |
+| `/clear`                      | Clear the terminal output         |
+| `/list`                       | List all saved notes              |
+| `/add <note>`                 | Save a new note                   |
+| `/delete <id>`                | Delete a note by ID               |
+| `/edit <id> <note>`           | Update an existing note           |
+| `/tag <id> <tag1> [tag2 ...]` | Add one or more tags to a note    |
+| `/search <query>`             | Search notes by text or tags      |
+| `/export`                     | Download all notes as a JSON file |
+| `/import`                     | Import notes from a JSON file     |
+
+---
+
+## 🛠 Tech Stack
+
+- **React**
+- **TypeScript**
+- **Vite**
+- **Tailwind CSS v4**
+- **Zustand** for state management
+- **react-hotkeys-hook** for keyboard shortcuts
+- **IndexedDB** for persistent local storage
+
+---
+
+## 📦 Getting Started
+
+### 1. Install dependencies
+
+```bash
+pnpm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Start the development server
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm dev
 ```
+
+### 3. Build for production
+
+```bash
+pnpm build
+```
+
+---
+
+## 💡 Example Usage
+
+```text
+/add Buy oat milk
+/list
+/tag 123abc groceries urgent
+/search groceries
+/edit 123abc Buy oat milk and bananas
+/export
+```
+
+---
+
+## 🗂 Project Structure
+
+```text
+src/
+  components/         # Terminal UI and page components
+  helpers/            # Command logic, IndexedDB helpers, shared utilities
+  hooks/              # Input and keyboard behavior
+  states/             # Zustand store for terminal lines
+```
+
+---
+
+## 🎯 Project Goals
+
+This project focuses on:
+
+- making note-taking feel fast and lightweight
+- keeping everything local and simple
+- blending a terminal aesthetic with a more polished modern UI
+- creating a small but useful productivity tool without backend complexity
+
+---
+
+## 📌 Notes
+
+- All data is stored locally in your browser.
+- There is currently **no cloud sync or backend**.
+- Exporting your notes is recommended if you want a backup.
+
+---
+
+## License
+
+This project is open for learning, experimentation, and improvement.
