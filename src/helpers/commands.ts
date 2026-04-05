@@ -6,7 +6,7 @@ import {
   deleteNoteFromIndexedDB,
   editNoteInIndexedDB,
 } from './indexed-db';
-import { addOutputLine, stripWrappingQuotes } from './methods';
+import { addOutputLine, createAtRelativeTime, stripWrappingQuotes } from './methods';
 
 export const runCommand = (input: string): boolean => {
   const trimmed = input.trim();
@@ -41,7 +41,7 @@ export const runCommand = (input: string): boolean => {
             addOutputLine(
               'Saved notes:',
               'info',
-              notes.map(({ id, text }) => `[${id}] ${text}`),
+              notes.map(({ id, text, createdAt }) => `[${id}] ${text} (${createAtRelativeTime(new Date(createdAt))})`),
             );
           }
         })
@@ -132,6 +132,25 @@ export const runCommand = (input: string): boolean => {
         .catch((error: unknown) => {
           const message = error instanceof Error ? error.message : 'Unknown error';
           addOutputLine(`Failed to search notes: ${message}`, 'error');
+        });
+
+      return true;
+    }
+    case 'export': {
+      void getAllNotesFromIndexedDB()
+        .then(notes => {
+          const dataStr = JSON.stringify(notes, null, 2);
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `notes_export_${new Date().toISOString()}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          addOutputLine(`Failed to export notes: ${message}`, 'error');
         });
 
       return true;
