@@ -11,3 +11,5 @@ export const addOutputLine = (text: string, variant: LineVariant = 'default', it
     variant,
   });
 };
+
+export const stripWrappingQuotes = (value: string): string => value.replace(/^['"]|['"]$/g, '');

@@ -1,5 +1,5 @@
 export const HOTKEYS = ['enter', 'arrowup', 'arrowdown'];
-export const ALLOWED_COMMANDS = ['clear', 'help', 'list', 'add', 'delete', 'edit'];
+export const ALLOWED_COMMANDS = ['clear', 'help', 'list', 'add', 'delete', 'edit', 'search'];
 export const HELP_COMMANDS = [
   { command: '/clear', description: 'Clears the terminal' },
   { command: '/help', description: 'Shows this help message' },
@@ -7,4 +7,5 @@ export const HELP_COMMANDS = [
   { command: '/add <note>', description: 'Saves a note to IndexedDB' },
   { command: '/delete <id>', description: 'Deletes a note from IndexedDB by ID' },
   { command: '/edit <id> <note>', description: 'Edits a saved note by ID' },
+  { command: '/search <query>', description: 'Searches notes for a query' },
 ];

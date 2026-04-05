@@ -6,9 +6,7 @@ import {
   deleteNoteFromIndexedDB,
   editNoteInIndexedDB,
 } from './indexed-db';
-import { addOutputLine } from './methods';
-
-const stripWrappingQuotes = (value: string): string => value.replace(/^['"]|['"]$/g, '');
+import { addOutputLine, stripWrappingQuotes } from './methods';
 
 export const runCommand = (input: string): boolean => {
   const trimmed = input.trim();
@@ -55,7 +53,7 @@ export const runCommand = (input: string): boolean => {
       return true;
     case 'add': {
       if (!note) {
-        addOutputLine('Usage: /add <note>', 'error');
+        addOutputLine('Usage: /add <note>');
         return true;
       }
 
@@ -96,7 +94,7 @@ export const runCommand = (input: string): boolean => {
       const newText = stripWrappingQuotes(textParts.join(' ').trim());
 
       if (!noteId || !newText) {
-        addOutputLine('Usage: /edit <id> <new note text>', 'error');
+        addOutputLine('Usage: /edit <id> <new note text>');
         return true;
       }
 
@@ -108,6 +106,34 @@ export const runCommand = (input: string): boolean => {
           const message = error instanceof Error ? error.message : 'Unknown error';
           addOutputLine(`Failed to edit note: ${message}`, 'error');
         });
+      return true;
+    }
+    case 'search': {
+      if (!note) {
+        addOutputLine('Usage: /search <query>');
+        return true;
+      }
+
+      const query = stripWrappingQuotes(note).toLowerCase();
+
+      void getAllNotesFromIndexedDB()
+        .then(notes => {
+          const results = notes.filter(({ text }) => text.toLowerCase().includes(query));
+          if (results.length === 0) {
+            addOutputLine('No matching notes found.', 'info');
+          } else {
+            addOutputLine(
+              `Search results for "${query}":`,
+              'info',
+              results.map(({ id, text }) => `[${id}] ${text}`),
+            );
+          }
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          addOutputLine(`Failed to search notes: ${message}`, 'error');
+        });
+
       return true;
     }
     default:
