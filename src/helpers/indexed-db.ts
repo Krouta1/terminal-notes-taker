@@ -1,3 +1,5 @@
+import { normalizeImportedNotes } from './methods';
+
 const DB_NAME = 'terminal-notes-taker';
 const STORE_NAME = 'notes';
 
@@ -55,6 +57,27 @@ export const getAllNotesFromIndexedDB = async (): Promise<NoteRecord[]> => {
     request.onerror = () => reject(request.error ?? new Error('Failed to retrieve notes.'));
     transaction.oncomplete = () => db.close();
     transaction.onerror = () => reject(transaction.error ?? new Error('Failed to retrieve notes.'));
+  });
+};
+
+export const importNotesToIndexedDB = async (payload: unknown): Promise<NoteRecord[]> => {
+  const db = await openNotesDatabase();
+  const notesToImport = normalizeImportedNotes(payload);
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+
+    notesToImport.forEach(noteRecord => {
+      store.put(noteRecord);
+    });
+
+    transaction.oncomplete = () => {
+      db.close();
+      resolve(notesToImport);
+    };
+    transaction.onerror = () => reject(transaction.error ?? new Error('Failed to import notes.'));
+    transaction.onabort = () => reject(transaction.error ?? new Error('Failed to import notes.'));
   });
 };
 

@@ -1,5 +1,5 @@
 export const HOTKEYS = ['enter', 'arrowup', 'arrowdown'];
-export const ALLOWED_COMMANDS = ['clear', 'help', 'list', 'add', 'delete', 'edit', 'search', 'export'];
+export const ALLOWED_COMMANDS = ['clear', 'help', 'list', 'add', 'delete', 'edit', 'search', 'export', 'import'];
 export const HELP_COMMANDS = [
   { command: '/clear', description: 'Clears the terminal' },
   { command: '/help', description: 'Shows this help message' },
@@ -9,4 +9,5 @@ export const HELP_COMMANDS = [
   { command: '/edit <id> <note>', description: 'Edits a saved note by ID' },
   { command: '/search <query>', description: 'Searches notes for a query' },
   { command: '/export', description: 'Exports all notes as a JSON file' },
+  { command: '/import <file>', description: 'Imports notes from a JSON file' },
 ];

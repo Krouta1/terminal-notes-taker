@@ -5,8 +5,43 @@ import {
   getAllNotesFromIndexedDB,
   deleteNoteFromIndexedDB,
   editNoteInIndexedDB,
+  importNotesToIndexedDB,
 } from './indexed-db';
 import { addOutputLine, createAtRelativeTime, stripWrappingQuotes } from './methods';
+
+const pickImportFile = (): Promise<File | null> =>
+  new Promise(resolve => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.style.display = 'none';
+
+    input.onchange = () => {
+      const [file] = Array.from(input.files ?? []);
+      input.remove();
+      resolve(file ?? null);
+    };
+
+    document.body.appendChild(input);
+    input.click();
+  });
+
+const readFileAsText = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error(`Failed to read file "${file.name}".`));
+    };
+
+    reader.onerror = () => reject(reader.error ?? new Error(`Failed to read file "${file.name}".`));
+    reader.readAsText(file);
+  });
 
 export const runCommand = (input: string): boolean => {
   const trimmed = input.trim();
@@ -151,6 +186,37 @@ export const runCommand = (input: string): boolean => {
         .catch((error: unknown) => {
           const message = error instanceof Error ? error.message : 'Unknown error';
           addOutputLine(`Failed to export notes: ${message}`, 'error');
+        });
+
+      return true;
+    }
+    case 'import': {
+      addOutputLine('Select a JSON file to import...', 'info');
+
+      void pickImportFile()
+        .then(file => {
+          if (!file) {
+            addOutputLine('Import canceled.', 'info');
+            return null;
+          }
+
+          return readFileAsText(file).then(contents => ({ contents, fileName: file.name }));
+        })
+        .then(result => {
+          if (!result) {
+            return;
+          }
+
+          const parsed = JSON.parse(result.contents) as unknown;
+
+          return importNotesToIndexedDB(parsed).then(importedNotes => {
+            const noteLabel = importedNotes.length === 1 ? 'note' : 'notes';
+            addOutputLine(`Imported ${importedNotes.length} ${noteLabel} from "${result.fileName}".`);
+          });
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          addOutputLine(`Failed to import notes: ${message}`, 'error');
         });
 
       return true;
